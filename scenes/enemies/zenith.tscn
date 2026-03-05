@@ -1,0 +1,37 @@
+[gd_scene load_steps=5 format=3 uid="uid://zenith_boss_scene"]
+
+[ext_resource type="Script" path="res://scripts/enemies/zenith.gd" id="1_zenith"]
+[ext_resource type="PackedScene" path="res://assets/models/enemies/Skeleton_Mage.glb" id="2_skeleton_model"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_enemy"]
+radius = 0.9
+height = 2.6
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_detection"]
+radius = 30.0
+
+[node name="Zenith" type="CharacterBody3D"]
+collision_layer = 4
+collision_mask = 7
+script = ExtResource("1_zenith")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.3, 0)
+shape = SubResource("CapsuleShape3D_enemy")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="SkeletonModel" parent="Model" instance=ExtResource("2_skeleton_model")]
+transform = Transform3D(-2.2, 0, 0, 0, 2.2, 0, 0, 0, -2.2, 0, 0, 0)
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_desired_distance = 1.0
+target_desired_distance = 1.5
+max_speed = 5.0
+
+[node name="DetectionArea" type="Area3D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="DetectionShape" type="CollisionShape3D" parent="DetectionArea"]
+shape = SubResource("SphereShape3D_detection")

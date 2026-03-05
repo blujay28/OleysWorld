@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3 uid="uid://purple_coin_scene"]
+
+[ext_resource type="Script" path="res://scripts/pickups/purple_coin.gd" id="1_coin"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_coin"]
+height = 0.2
+radius = 0.3
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_coin"]
+radius = 0.35
+
+[node name="PurpleCoin" type="Area3D"]
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("1_coin")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_coin")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_coin")

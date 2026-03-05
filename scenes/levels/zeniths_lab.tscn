@@ -1,0 +1,272 @@
+[gd_scene load_steps=22 format=3 uid="uid://zeniths_lab_level"]
+
+[ext_resource type="Script" path="res://scripts/levels/zeniths_lab.gd" id="1_level"]
+[ext_resource type="PackedScene" path="res://scenes/player/oley.tscn" id="2_oley"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="3_hud"]
+[ext_resource type="PackedScene" path="res://scenes/environment/interactable_door.tscn" id="4_door"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_entrance"]
+size = Vector3(14, 0.5, 12)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_corridor1"]
+size = Vector3(6, 0.5, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_test_chamber"]
+size = Vector3(24, 0.5, 22)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_corridor2"]
+size = Vector3(6, 0.5, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_containment"]
+size = Vector3(20, 0.5, 16)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_reactor"]
+size = Vector3(28, 0.5, 28)
+
+[sub_resource type="BoxMesh" id="BoxMesh_entrance"]
+size = Vector3(14, 0.5, 12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_corridor1"]
+size = Vector3(6, 0.5, 10)
+
+[sub_resource type="BoxMesh" id="BoxMesh_test_chamber"]
+size = Vector3(24, 0.5, 22)
+
+[sub_resource type="BoxMesh" id="BoxMesh_corridor2"]
+size = Vector3(6, 0.5, 10)
+
+[sub_resource type="BoxMesh" id="BoxMesh_containment"]
+size = Vector3(20, 0.5, 16)
+
+[sub_resource type="BoxMesh" id="BoxMesh_reactor"]
+size = Vector3(28, 0.5, 28)
+
+[sub_resource type="StandardMaterial3D" id="Material_entrance"]
+albedo_color = Color(0.22, 0.22, 0.28, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_corridor"]
+albedo_color = Color(0.18, 0.18, 0.24, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_test_chamber"]
+albedo_color = Color(0.2, 0.2, 0.26, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_containment"]
+albedo_color = Color(0.18, 0.2, 0.22, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_reactor"]
+albedo_color = Color(0.15, 0.12, 0.2, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_boss_trigger"]
+size = Vector3(6, 4, 1)
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
+sky_top_color = Color(0.01, 0.01, 0.03, 1)
+sky_horizon_color = Color(0.05, 0.03, 0.08, 1)
+ground_bottom_color = Color(0.02, 0.01, 0.03, 1)
+ground_horizon_color = Color(0.05, 0.03, 0.08, 1)
+
+[sub_resource type="Sky" id="Sky_1"]
+sky_material = SubResource("ProceduralSkyMaterial_1")
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 2
+sky = SubResource("Sky_1")
+ambient_light_source = 2
+ambient_light_color = Color(0.08, 0.06, 0.12, 1)
+ambient_light_energy = 0.2
+tonemap_mode = 2
+ssao_enabled = true
+ssao_radius = 1.5
+ssao_intensity = 2.5
+glow_enabled = true
+glow_normalized = true
+glow_blend_mode = 1
+glow_hdr_threshold = 0.6
+glow_hdr_scale = 2.5
+glow_levels/1 = 1.0
+glow_levels/2 = 1.0
+glow_levels/4 = 0.6
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.025
+volumetric_fog_albedo = Color(0.05, 0.03, 0.08, 1)
+volumetric_fog_emission = Color(0.02, 0.01, 0.04, 1)
+volumetric_fog_emission_energy = 0.5
+fog_enabled = true
+fog_light_color = Color(0.04, 0.03, 0.06, 1)
+fog_density = 0.02
+
+[node name="ZenithsLab" type="Node3D"]
+script = ExtResource("1_level")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 12, 0)
+light_color = Color(0.3, 0.25, 0.5, 1)
+light_energy = 0.3
+shadow_enabled = true
+
+[node name="LevelGeometry" type="Node3D" parent="."]
+
+[node name="Entrance" type="StaticBody3D" parent="LevelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+
+[node name="EntranceCollision" type="CollisionShape3D" parent="LevelGeometry/Entrance"]
+shape = SubResource("BoxShape3D_entrance")
+
+[node name="EntranceMesh" type="MeshInstance3D" parent="LevelGeometry/Entrance"]
+mesh = SubResource("BoxMesh_entrance")
+surface_material_override/0 = SubResource("Material_entrance")
+
+[node name="Corridor1" type="StaticBody3D" parent="LevelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -11)
+
+[node name="Corridor1Collision" type="CollisionShape3D" parent="LevelGeometry/Corridor1"]
+shape = SubResource("BoxShape3D_corridor1")
+
+[node name="Corridor1Mesh" type="MeshInstance3D" parent="LevelGeometry/Corridor1"]
+mesh = SubResource("BoxMesh_corridor1")
+surface_material_override/0 = SubResource("Material_corridor")
+
+[node name="TestChamber" type="StaticBody3D" parent="LevelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -27)
+
+[node name="TestChamberCollision" type="CollisionShape3D" parent="LevelGeometry/TestChamber"]
+shape = SubResource("BoxShape3D_test_chamber")
+
+[node name="TestChamberMesh" type="MeshInstance3D" parent="LevelGeometry/TestChamber"]
+mesh = SubResource("BoxMesh_test_chamber")
+surface_material_override/0 = SubResource("Material_test_chamber")
+
+[node name="Corridor2" type="StaticBody3D" parent="LevelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -43)
+
+[node name="Corridor2Collision" type="CollisionShape3D" parent="LevelGeometry/Corridor2"]
+shape = SubResource("BoxShape3D_corridor2")
+
+[node name="Corridor2Mesh" type="MeshInstance3D" parent="LevelGeometry/Corridor2"]
+mesh = SubResource("BoxMesh_corridor2")
+surface_material_override/0 = SubResource("Material_corridor")
+
+[node name="Containment" type="StaticBody3D" parent="LevelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -56)
+
+[node name="ContainmentCollision" type="CollisionShape3D" parent="LevelGeometry/Containment"]
+shape = SubResource("BoxShape3D_containment")
+
+[node name="ContainmentMesh" type="MeshInstance3D" parent="LevelGeometry/Containment"]
+mesh = SubResource("BoxMesh_containment")
+surface_material_override/0 = SubResource("Material_containment")
+
+[node name="ReactorCore" type="StaticBody3D" parent="LevelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -78)
+
+[node name="ReactorCollision" type="CollisionShape3D" parent="LevelGeometry/ReactorCore"]
+shape = SubResource("BoxShape3D_reactor")
+
+[node name="ReactorMesh" type="MeshInstance3D" parent="LevelGeometry/ReactorCore"]
+mesh = SubResource("BoxMesh_reactor")
+surface_material_override/0 = SubResource("Material_reactor")
+
+[node name="BossTrigger" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -64)
+collision_layer = 0
+collision_mask = 2
+
+[node name="BossTriggerShape" type="CollisionShape3D" parent="BossTrigger"]
+shape = SubResource("BoxShape3D_boss_trigger")
+
+[node name="Oley" parent="." instance=ExtResource("2_oley")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 3)
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="BossContainer" type="Node3D" parent="."]
+
+[node name="Pickups" type="Node3D" parent="."]
+
+[node name="Walls" type="Node3D" parent="."]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="Doors" type="Node3D" parent="."]
+
+[node name="EntranceDoor" parent="Doors" instance=ExtResource("4_door")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, -6)
+
+[node name="TestChamberDoor" parent="Doors" instance=ExtResource("4_door")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, -16)
+
+[node name="Corridor2Door" parent="Doors" instance=ExtResource("4_door")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, -38)
+
+[node name="ContainmentDoor" parent="Doors" instance=ExtResource("4_door")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, -48)
+
+[node name="ReactorDoor" parent="Doors" instance=ExtResource("4_door")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, -64)
+
+[node name="HUD" parent="." instance=ExtResource("3_hud")]
+
+[node name="Lighting" type="Node3D" parent="."]
+
+[node name="EntranceLight" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+light_color = Color(0.7, 0.8, 1, 1)
+light_energy = 1.5
+omni_range = 8.0
+
+[node name="Corridor1Light" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -11)
+light_color = Color(0.6, 0.7, 0.9, 1)
+light_energy = 1.0
+omni_range = 6.0
+
+[node name="TestChamberLight1" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 3, -24)
+light_color = Color(0.7, 0.8, 1, 1)
+light_energy = 2.0
+omni_range = 10.0
+
+[node name="TestChamberLight2" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3, -30)
+light_color = Color(0.7, 0.8, 1, 1)
+light_energy = 2.0
+omni_range = 10.0
+
+[node name="Corridor2Light" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -43)
+light_color = Color(0.6, 0.5, 0.8, 1)
+light_energy = 1.0
+omni_range = 6.0
+
+[node name="ContainmentLight1" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 3, -53)
+light_color = Color(0.2, 0.8, 0.4, 1)
+light_energy = 1.5
+omni_range = 8.0
+
+[node name="ContainmentLight2" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3, -59)
+light_color = Color(0.2, 0.8, 0.4, 1)
+light_energy = 1.5
+omni_range = 8.0
+
+[node name="ReactorLight1" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 4, -72)
+light_color = Color(0.5, 0.2, 1, 1)
+light_energy = 3.0
+omni_range = 14.0
+
+[node name="ReactorLight2" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 4, -84)
+light_color = Color(0.5, 0.2, 1, 1)
+light_energy = 3.0
+omni_range = 14.0
+
+[node name="ReactorLight3" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -78)
+light_color = Color(0.6, 0.2, 1, 1)
+light_energy = 4.0
+omni_range = 18.0

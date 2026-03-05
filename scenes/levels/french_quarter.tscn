@@ -1,0 +1,269 @@
+[gd_scene load_steps=22 format=3 uid="uid://french_quarter_level"]
+
+[ext_resource type="Script" path="res://scripts/levels/french_quarter.gd" id="1_level"]
+[ext_resource type="PackedScene" path="res://scenes/player/oley.tscn" id="2_oley"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="3_hud"]
+[ext_resource type="PackedScene" path="res://scenes/environment/interactable_door.tscn" id="4_door"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_courtyard"]
+size = Vector3(16, 0.5, 14)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_alley1"]
+size = Vector3(5, 0.5, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_market"]
+size = Vector3(22, 0.5, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_alley2"]
+size = Vector3(5, 0.5, 12)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_graveyard"]
+size = Vector3(18, 0.5, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_boss_arena"]
+size = Vector3(26, 0.5, 26)
+
+[sub_resource type="BoxMesh" id="BoxMesh_courtyard"]
+size = Vector3(16, 0.5, 14)
+
+[sub_resource type="BoxMesh" id="BoxMesh_alley1"]
+size = Vector3(5, 0.5, 10)
+
+[sub_resource type="BoxMesh" id="BoxMesh_market"]
+size = Vector3(22, 0.5, 20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_alley2"]
+size = Vector3(5, 0.5, 12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_graveyard"]
+size = Vector3(18, 0.5, 10)
+
+[sub_resource type="BoxMesh" id="BoxMesh_boss_arena"]
+size = Vector3(26, 0.5, 26)
+
+[sub_resource type="StandardMaterial3D" id="Material_courtyard"]
+albedo_color = Color(0.32, 0.28, 0.22, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_alley"]
+albedo_color = Color(0.25, 0.2, 0.16, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_market"]
+albedo_color = Color(0.3, 0.25, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_graveyard"]
+albedo_color = Color(0.18, 0.22, 0.15, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_boss_arena"]
+albedo_color = Color(0.15, 0.18, 0.12, 1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_boss_trigger"]
+size = Vector3(6, 4, 1)
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
+sky_top_color = Color(0.03, 0.02, 0.08, 1)
+sky_horizon_color = Color(0.1, 0.06, 0.12, 1)
+ground_bottom_color = Color(0.04, 0.03, 0.05, 1)
+ground_horizon_color = Color(0.1, 0.06, 0.12, 1)
+
+[sub_resource type="Sky" id="Sky_1"]
+sky_material = SubResource("ProceduralSkyMaterial_1")
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 2
+sky = SubResource("Sky_1")
+ambient_light_source = 2
+ambient_light_color = Color(0.1, 0.08, 0.12, 1)
+ambient_light_energy = 0.25
+tonemap_mode = 2
+ssao_enabled = true
+ssao_radius = 1.5
+ssao_intensity = 2.0
+glow_enabled = true
+glow_normalized = true
+glow_blend_mode = 1
+glow_hdr_threshold = 0.8
+glow_hdr_scale = 2.0
+glow_levels/1 = 1.0
+glow_levels/2 = 0.8
+glow_levels/4 = 0.4
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.02
+volumetric_fog_albedo = Color(0.08, 0.05, 0.1, 1)
+volumetric_fog_emission = Color(0.03, 0.02, 0.05, 1)
+volumetric_fog_emission_energy = 0.5
+fog_enabled = true
+fog_light_color = Color(0.06, 0.04, 0.08, 1)
+fog_density = 0.015
+
+[node name="FrenchQuarter" type="Node3D"]
+script = ExtResource("1_level")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 12, 0)
+light_color = Color(0.3, 0.25, 0.4, 1)
+light_energy = 0.4
+shadow_enabled = true
+
+[node name="LevelGeometry" type="Node3D" parent="."]
+
+[node name="Courtyard" type="StaticBody3D" parent="LevelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+
+[node name="CourtyardCollision" type="CollisionShape3D" parent="LevelGeometry/Courtyard"]
+shape = SubResource("BoxShape3D_courtyard")
+
+[node name="CourtyardMesh" type="MeshInstance3D" parent="LevelGeometry/Courtyard"]
+mesh = SubResource("BoxMesh_courtyard")
+surface_material_override/0 = SubResource("Material_courtyard")
+
+[node name="Alley1" type="StaticBody3D" parent="LevelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -12)
+
+[node name="Alley1Collision" type="CollisionShape3D" parent="LevelGeometry/Alley1"]
+shape = SubResource("BoxShape3D_alley1")
+
+[node name="Alley1Mesh" type="MeshInstance3D" parent="LevelGeometry/Alley1"]
+mesh = SubResource("BoxMesh_alley1")
+surface_material_override/0 = SubResource("Material_alley")
+
+[node name="MarketSquare" type="StaticBody3D" parent="LevelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -27)
+
+[node name="MarketCollision" type="CollisionShape3D" parent="LevelGeometry/MarketSquare"]
+shape = SubResource("BoxShape3D_market")
+
+[node name="MarketMesh" type="MeshInstance3D" parent="LevelGeometry/MarketSquare"]
+mesh = SubResource("BoxMesh_market")
+surface_material_override/0 = SubResource("Material_market")
+
+[node name="Alley2" type="StaticBody3D" parent="LevelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -43)
+
+[node name="Alley2Collision" type="CollisionShape3D" parent="LevelGeometry/Alley2"]
+shape = SubResource("BoxShape3D_alley2")
+
+[node name="Alley2Mesh" type="MeshInstance3D" parent="LevelGeometry/Alley2"]
+mesh = SubResource("BoxMesh_alley2")
+surface_material_override/0 = SubResource("Material_alley")
+
+[node name="Graveyard" type="StaticBody3D" parent="LevelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -54)
+
+[node name="GraveyardCollision" type="CollisionShape3D" parent="LevelGeometry/Graveyard"]
+shape = SubResource("BoxShape3D_graveyard")
+
+[node name="GraveyardMesh" type="MeshInstance3D" parent="LevelGeometry/Graveyard"]
+mesh = SubResource("BoxMesh_graveyard")
+surface_material_override/0 = SubResource("Material_graveyard")
+
+[node name="BossArena" type="StaticBody3D" parent="LevelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -72)
+
+[node name="BossArenaCollision" type="CollisionShape3D" parent="LevelGeometry/BossArena"]
+shape = SubResource("BoxShape3D_boss_arena")
+
+[node name="BossArenaMesh" type="MeshInstance3D" parent="LevelGeometry/BossArena"]
+mesh = SubResource("BoxMesh_boss_arena")
+surface_material_override/0 = SubResource("Material_boss_arena")
+
+[node name="BossTrigger" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, -59)
+collision_layer = 0
+collision_mask = 2
+
+[node name="BossTriggerShape" type="CollisionShape3D" parent="BossTrigger"]
+shape = SubResource("BoxShape3D_boss_trigger")
+
+[node name="Oley" parent="." instance=ExtResource("2_oley")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 3)
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="BossContainer" type="Node3D" parent="."]
+
+[node name="Pickups" type="Node3D" parent="."]
+
+[node name="Walls" type="Node3D" parent="."]
+
+[node name="Props" type="Node3D" parent="."]
+
+[node name="Doors" type="Node3D" parent="."]
+
+[node name="CourtyardDoor" parent="Doors" instance=ExtResource("4_door")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, -7)
+
+[node name="MarketDoor" parent="Doors" instance=ExtResource("4_door")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, -17)
+
+[node name="Alley2Door" parent="Doors" instance=ExtResource("4_door")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, -37)
+
+[node name="GraveyardDoor" parent="Doors" instance=ExtResource("4_door")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 0, -49)
+
+[node name="HUD" parent="." instance=ExtResource("3_hud")]
+
+[node name="Lighting" type="Node3D" parent="."]
+
+[node name="CourtyardLight" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0)
+light_color = Color(0.8, 0.6, 0.9, 1)
+light_energy = 1.8
+omni_range = 10.0
+
+[node name="Alley1Light" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -12)
+light_color = Color(0.6, 0.4, 0.7, 1)
+light_energy = 1.2
+omni_range = 6.0
+
+[node name="MarketLight1" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 3, -24)
+light_color = Color(1, 0.7, 0.4, 1)
+light_energy = 2.0
+omni_range = 10.0
+
+[node name="MarketLight2" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 3, -30)
+light_color = Color(1, 0.7, 0.4, 1)
+light_energy = 2.0
+omni_range = 10.0
+
+[node name="Alley2Light" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -43)
+light_color = Color(0.5, 0.3, 0.6, 1)
+light_energy = 1.0
+omni_range = 6.0
+
+[node name="GraveyardLight1" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 3, -54)
+light_color = Color(0.2, 0.7, 0.3, 1)
+light_energy = 1.5
+omni_range = 8.0
+
+[node name="GraveyardLight2" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 3, -54)
+light_color = Color(0.2, 0.7, 0.3, 1)
+light_energy = 1.5
+omni_range = 8.0
+
+[node name="BossLight1" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 4, -66)
+light_color = Color(0.3, 0.9, 0.2, 1)
+light_energy = 2.5
+omni_range = 14.0
+
+[node name="BossLight2" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 9, 4, -78)
+light_color = Color(0.3, 0.9, 0.2, 1)
+light_energy = 2.5
+omni_range = 14.0
+
+[node name="BossLight3" type="OmniLight3D" parent="Lighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, -72)
+light_color = Color(0.2, 1, 0.3, 1)
+light_energy = 3.0
+omni_range = 16.0

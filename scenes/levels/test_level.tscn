@@ -1,0 +1,169 @@
+[gd_scene load_steps=15 format=3 uid="uid://test_level_scene"]
+
+[ext_resource type="Script" path="res://scripts/levels/test_level.gd" id="1_level"]
+[ext_resource type="PackedScene" path="res://scenes/player/oley.tscn" id="2_oley"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="3_hud"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hub_floor"]
+size = Vector3(20, 0.5, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_north_floor"]
+size = Vector3(10, 0.5, 30)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_east_floor"]
+size = Vector3(25, 0.5, 10)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_west_floor"]
+size = Vector3(20, 0.5, 12)
+
+[sub_resource type="StandardMaterial3D" id="Material_hub"]
+albedo_color = Color(0.25, 0.22, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_north"]
+albedo_color = Color(0.3, 0.2, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_east"]
+albedo_color = Color(0.2, 0.25, 0.3, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_west"]
+albedo_color = Color(0.3, 0.2, 0.25, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_hub"]
+size = Vector3(20, 0.5, 20)
+
+[sub_resource type="BoxMesh" id="BoxMesh_north"]
+size = Vector3(10, 0.5, 30)
+
+[sub_resource type="BoxMesh" id="BoxMesh_east"]
+size = Vector3(25, 0.5, 10)
+
+[sub_resource type="BoxMesh" id="BoxMesh_west"]
+size = Vector3(20, 0.5, 12)
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
+sky_top_color = Color(0.05, 0.05, 0.12, 1)
+sky_horizon_color = Color(0.15, 0.1, 0.2, 1)
+ground_bottom_color = Color(0.05, 0.03, 0.05, 1)
+ground_horizon_color = Color(0.15, 0.1, 0.2, 1)
+
+[sub_resource type="Sky" id="Sky_1"]
+sky_material = SubResource("ProceduralSkyMaterial_1")
+
+[sub_resource type="Environment" id="Environment_1"]
+background_mode = 2
+sky = SubResource("Sky_1")
+ambient_light_source = 2
+ambient_light_color = Color(0.15, 0.12, 0.2, 1)
+ambient_light_energy = 0.4
+tonemap_mode = 2
+glow_enabled = true
+fog_enabled = true
+fog_light_color = Color(0.1, 0.08, 0.15, 1)
+fog_density = 0.005
+
+[node name="TestLevel" type="Node3D"]
+script = ExtResource("1_level")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_1")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.433, 0.25, 0, 0.5, 0.866, -0.5, -0.75, 0.433, 0, 15, 0)
+light_color = Color(0.6, 0.55, 0.7, 1)
+light_energy = 0.8
+shadow_enabled = true
+
+[node name="Navigation" type="NavigationRegion3D" parent="."]
+
+[node name="LevelGeometry" type="Node3D" parent="Navigation"]
+
+[node name="HubFloor" type="StaticBody3D" parent="Navigation/LevelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, 0)
+
+[node name="HubFloorCollision" type="CollisionShape3D" parent="Navigation/LevelGeometry/HubFloor"]
+shape = SubResource("BoxShape3D_hub_floor")
+
+[node name="HubFloorMesh" type="MeshInstance3D" parent="Navigation/LevelGeometry/HubFloor"]
+mesh = SubResource("BoxMesh_hub")
+surface_material_override/0 = SubResource("Material_hub")
+
+[node name="NorthBranch" type="StaticBody3D" parent="Navigation/LevelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.25, -25)
+
+[node name="NorthFloorCollision" type="CollisionShape3D" parent="Navigation/LevelGeometry/NorthBranch"]
+shape = SubResource("BoxShape3D_north_floor")
+
+[node name="NorthFloorMesh" type="MeshInstance3D" parent="Navigation/LevelGeometry/NorthBranch"]
+mesh = SubResource("BoxMesh_north")
+surface_material_override/0 = SubResource("Material_north")
+
+[node name="EastBranch" type="StaticBody3D" parent="Navigation/LevelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22.5, -0.25, 0)
+
+[node name="EastFloorCollision" type="CollisionShape3D" parent="Navigation/LevelGeometry/EastBranch"]
+shape = SubResource("BoxShape3D_east_floor")
+
+[node name="EastFloorMesh" type="MeshInstance3D" parent="Navigation/LevelGeometry/EastBranch"]
+mesh = SubResource("BoxMesh_east")
+surface_material_override/0 = SubResource("Material_east")
+
+[node name="WestBranch" type="StaticBody3D" parent="Navigation/LevelGeometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, -0.25, 0)
+
+[node name="WestFloorCollision" type="CollisionShape3D" parent="Navigation/LevelGeometry/WestBranch"]
+shape = SubResource("BoxShape3D_west_floor")
+
+[node name="WestFloorMesh" type="MeshInstance3D" parent="Navigation/LevelGeometry/WestBranch"]
+mesh = SubResource("BoxMesh_west")
+surface_material_override/0 = SubResource("Material_west")
+
+[node name="Oley" parent="." instance=ExtResource("2_oley")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="HUD" parent="." instance=ExtResource("3_hud")]
+
+[node name="HubLighting" type="Node3D" parent="."]
+
+[node name="HubTorch1" type="OmniLight3D" parent="HubLighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3, 8)
+light_color = Color(1, 0.7, 0.4, 1)
+light_energy = 2.0
+omni_range = 10.0
+
+[node name="HubTorch2" type="OmniLight3D" parent="HubLighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 3, 8)
+light_color = Color(1, 0.7, 0.4, 1)
+light_energy = 2.0
+omni_range = 10.0
+
+[node name="HubTorch3" type="OmniLight3D" parent="HubLighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 3, -8)
+light_color = Color(1, 0.7, 0.4, 1)
+light_energy = 2.0
+omni_range = 10.0
+
+[node name="HubTorch4" type="OmniLight3D" parent="HubLighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 3, -8)
+light_color = Color(1, 0.7, 0.4, 1)
+light_energy = 2.0
+omni_range = 10.0
+
+[node name="NorthLight" type="OmniLight3D" parent="HubLighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, -30)
+light_color = Color(0.9, 0.5, 0.4, 1)
+light_energy = 1.5
+omni_range = 12.0
+
+[node name="EastLight" type="OmniLight3D" parent="HubLighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28, 3, 0)
+light_color = Color(0.4, 0.6, 0.9, 1)
+light_energy = 1.5
+omni_range = 12.0
+
+[node name="WestLight" type="OmniLight3D" parent="HubLighting"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -25, 3, 0)
+light_color = Color(0.8, 0.4, 0.5, 1)
+light_energy = 1.8
+omni_range = 12.0

@@ -1,0 +1,371 @@
+[gd_scene load_steps=2 format=3 uid="uid://hud_scene"]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="1_hud"]
+
+[node name="HUD" type="CanvasLayer"]
+script = ExtResource("1_hud")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="TopBar" type="HBoxContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 12.0
+offset_right = -16.0
+offset_bottom = 56.0
+mouse_filter = 2
+
+[node name="ItemBar" type="HBoxContainer" parent="Root/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 2
+mouse_filter = 2
+
+[node name="TopRight" type="VBoxContainer" parent="Root/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 8
+alignment = 0
+mouse_filter = 2
+
+[node name="StageLabel" type="Label" parent="Root/TopBar/TopRight"]
+layout_mode = 2
+horizontal_alignment = 2
+text = "Dade's House"
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="TimerLabel" type="Label" parent="Root/TopBar/TopRight"]
+layout_mode = 2
+horizontal_alignment = 2
+text = "00:00"
+theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 0.8)
+theme_override_font_sizes/font_size = 14
+
+[node name="CoinsLabel" type="Label" parent="Root/TopBar/TopRight"]
+layout_mode = 2
+horizontal_alignment = 2
+text = "0"
+theme_override_colors/font_color = Color(0.7, 0.5, 1.0, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="BottomLeft" type="VBoxContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = -120.0
+offset_right = 340.0
+offset_bottom = -20.0
+mouse_filter = 2
+
+[node name="NameLabel" type="Label" parent="Root/BottomLeft"]
+layout_mode = 2
+text = "Oley"
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1)
+theme_override_font_sizes/font_size = 18
+
+[node name="HealthBarBG" type="ColorRect" parent="Root/BottomLeft"]
+layout_mode = 2
+custom_minimum_size = Vector2(300, 28)
+color = Color(0.1, 0.1, 0.12, 0.85)
+
+[node name="HealthBar" type="ColorRect" parent="Root/BottomLeft/HealthBarBG"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = -2.0
+offset_bottom = -2.0
+color = Color(0.3, 0.85, 0.35, 1)
+
+[node name="HealthText" type="Label" parent="Root/BottomLeft/HealthBarBG"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "100 / 100"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 13
+
+[node name="LevelLabel" type="Label" parent="Root/BottomLeft"]
+layout_mode = 2
+text = "Lv. 1"
+theme_override_colors/font_color = Color(0.7, 0.7, 0.8, 0.7)
+theme_override_font_sizes/font_size = 12
+
+[node name="BottomRight" type="HBoxContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -420.0
+offset_top = -100.0
+offset_right = -20.0
+offset_bottom = -20.0
+alignment = 2
+mouse_filter = 2
+
+[node name="Skill1" type="PanelContainer" parent="Root/BottomRight"]
+layout_mode = 2
+custom_minimum_size = Vector2(72, 72)
+
+[node name="BG" type="ColorRect" parent="Root/BottomRight/Skill1"]
+layout_mode = 2
+color = Color(0.12, 0.12, 0.15, 0.9)
+
+[node name="CooldownOverlay" type="ColorRect" parent="Root/BottomRight/Skill1"]
+layout_mode = 2
+color = Color(0, 0, 0, 0.6)
+visible = false
+
+[node name="VBox" type="VBoxContainer" parent="Root/BottomRight/Skill1"]
+layout_mode = 2
+alignment = 1
+mouse_filter = 2
+
+[node name="Icon" type="Label" parent="Root/BottomRight/Skill1/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "LMB"
+theme_override_colors/font_color = Color(0.9, 0.75, 0.3, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="Name" type="Label" parent="Root/BottomRight/Skill1/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Sword"
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 11
+
+[node name="Ammo" type="Label" parent="Root/BottomRight/Skill1/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Ready"
+theme_override_colors/font_color = Color(0.6, 0.8, 1.0, 0.9)
+theme_override_font_sizes/font_size = 10
+
+[node name="Skill2" type="PanelContainer" parent="Root/BottomRight"]
+layout_mode = 2
+custom_minimum_size = Vector2(72, 72)
+
+[node name="BG" type="ColorRect" parent="Root/BottomRight/Skill2"]
+layout_mode = 2
+color = Color(0.12, 0.12, 0.15, 0.9)
+
+[node name="CooldownOverlay" type="ColorRect" parent="Root/BottomRight/Skill2"]
+layout_mode = 2
+color = Color(0, 0, 0, 0.6)
+visible = false
+
+[node name="VBox" type="VBoxContainer" parent="Root/BottomRight/Skill2"]
+layout_mode = 2
+alignment = 1
+mouse_filter = 2
+
+[node name="Icon" type="Label" parent="Root/BottomRight/Skill2/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "2"
+theme_override_colors/font_color = Color(0.9, 0.75, 0.3, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="Name" type="Label" parent="Root/BottomRight/Skill2/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Bow"
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 11
+
+[node name="Info" type="Label" parent="Root/BottomRight/Skill2/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Melee"
+theme_override_colors/font_color = Color(0.6, 0.8, 1.0, 0.9)
+theme_override_font_sizes/font_size = 10
+
+[node name="Skill3" type="PanelContainer" parent="Root/BottomRight"]
+layout_mode = 2
+custom_minimum_size = Vector2(72, 72)
+
+[node name="BG" type="ColorRect" parent="Root/BottomRight/Skill3"]
+layout_mode = 2
+color = Color(0.12, 0.12, 0.15, 0.9)
+
+[node name="CooldownOverlay" type="ColorRect" parent="Root/BottomRight/Skill3"]
+layout_mode = 2
+color = Color(0, 0, 0, 0.6)
+visible = false
+
+[node name="VBox" type="VBoxContainer" parent="Root/BottomRight/Skill3"]
+layout_mode = 2
+alignment = 1
+mouse_filter = 2
+
+[node name="Icon" type="Label" parent="Root/BottomRight/Skill3/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Q"
+theme_override_colors/font_color = Color(0.9, 0.75, 0.3, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="Name" type="Label" parent="Root/BottomRight/Skill3/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Mewing"
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 11
+
+[node name="Cooldown" type="Label" parent="Root/BottomRight/Skill3/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Ready"
+theme_override_colors/font_color = Color(0.4, 0.9, 0.4, 0.9)
+theme_override_font_sizes/font_size = 10
+
+[node name="Skill4" type="PanelContainer" parent="Root/BottomRight"]
+layout_mode = 2
+custom_minimum_size = Vector2(72, 72)
+
+[node name="BG" type="ColorRect" parent="Root/BottomRight/Skill4"]
+layout_mode = 2
+color = Color(0.12, 0.12, 0.15, 0.9)
+
+[node name="CooldownOverlay" type="ColorRect" parent="Root/BottomRight/Skill4"]
+layout_mode = 2
+color = Color(0, 0, 0, 0.6)
+visible = false
+
+[node name="VBox" type="VBoxContainer" parent="Root/BottomRight/Skill4"]
+layout_mode = 2
+alignment = 1
+mouse_filter = 2
+
+[node name="Icon" type="Label" parent="Root/BottomRight/Skill4/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "E"
+theme_override_colors/font_color = Color(0.9, 0.75, 0.3, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="Name" type="Label" parent="Root/BottomRight/Skill4/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Hyper"
+theme_override_colors/font_color = Color(0.85, 0.85, 0.9, 1)
+theme_override_font_sizes/font_size = 11
+
+[node name="Cooldown" type="Label" parent="Root/BottomRight/Skill4/VBox"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Ready"
+theme_override_colors/font_color = Color(0.4, 0.9, 0.4, 0.9)
+theme_override_font_sizes/font_size = 10
+
+[node name="BossBar" type="VBoxContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -200.0
+offset_top = 60.0
+offset_right = 200.0
+offset_bottom = 110.0
+visible = false
+mouse_filter = 2
+
+[node name="BossName" type="Label" parent="Root/BossBar"]
+layout_mode = 2
+horizontal_alignment = 1
+text = "Big Mark"
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 18
+
+[node name="BossHealthBG" type="ColorRect" parent="Root/BossBar"]
+layout_mode = 2
+custom_minimum_size = Vector2(400, 20)
+color = Color(0.1, 0.1, 0.12, 0.85)
+
+[node name="BossHealthFill" type="ColorRect" parent="Root/BossBar/BossHealthBG"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = -2.0
+offset_bottom = -2.0
+color = Color(0.9, 0.15, 0.15, 1)
+
+[node name="BossHealthText" type="Label" parent="Root/BossBar/BossHealthBG"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "200 / 200"
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 11
+
+[node name="Crosshair" type="Label" parent="Root"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -16.0
+offset_top = -16.0
+offset_right = 16.0
+offset_bottom = 16.0
+horizontal_alignment = 1
+vertical_alignment = 1
+text = "+"
+theme_override_colors/font_color = Color(1, 1, 1, 0.6)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.5)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 22
+mouse_filter = 2
+
+[node name="CenterMessage" type="Label" parent="Root"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -40.0
+offset_right = 200.0
+offset_bottom = 40.0
+horizontal_alignment = 1
+vertical_alignment = 1
+text = ""
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.9)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 32
