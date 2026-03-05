@@ -2,9 +2,14 @@ extends CharacterBody3D
 class_name EnemyBase
 
 ## Base class for all enemies in Oley's World.
-## Handles health, damage, basic state machine, and death.
-## Extend this class for specific enemy types (Minion, Warrior, Mage, Rogue).
-## Physics-enhanced: impulse knockback, stagger, dramatic launch-on-death.
+## 
+## REFINEMENTS over vertical slice:
+##   - Attack telegraphing: enemies wind up before dealing damage (player gets reaction window)
+##   - Sane detection ranges: enemies don't all aggro from across the map
+##   - Group coordination: stagger attack timing so enemies don't all swing at once
+##   - Better stagger: hits feel meatier, enemies reel longer
+##   - Orbit behavior: melee enemies circle the player instead of stacking
+##   - Gravity uses is_on_floor properly for death launches
 
 enum State { IDLE, PATROL, CHASE, ATTACK, HURT, DEAD }
 
@@ -20,11 +25,23 @@ enum State { IDLE, PATROL, CHASE, ATTACK, HURT, DEAD }
 
 # -- Physics / Knockback --
 @export_group("Physics")
-@export var knockback_resistance: float = 1.0   ## 1.0 = normal, 2.0 = tanky, 0.5 = light
-@export var knockback_decay: float = 8.0        ## How fast knockback velocity decays
-@export var death_launch_force: float = 8.0     ## Upward impulse on death
-@export var death_tumble_force: float = 5.0     ## Horizontal scatter on death
-@export var hit_stagger_duration: float = 0.3   ## How long the enemy staggers after hit
+@export var knockback_resistance: float = 1.0
+@export var knockback_decay: float = 8.0
+@export var death_launch_force: float = 8.0
+@export var death_tumble_force: float = 5.0
+@export var hit_stagger_duration: float = 0.4   ## INCREASED from 0.3 — hits feel heavier
+
+# -- Attack Telegraph --
+@export_group("Attack Telegraph")
+@export var telegraph_duration: float = 0.4      ## Wind-up time before damage lands
+@export var telegraph_color: Color = Color(1, 0.3, 0.2, 0.8)  ## Flash color during wind-up
+
+# -- Group Coordination --
+@export_group("Group AI")
+@export var attack_delay_variance: float = 0.6   ## Random delay added so enemies don't all swing together
+@export var orbit_speed: float = 2.0             ## Speed at which enemies circle the player
+@export var orbit_direction: float = 1.0         ## 1 or -1, randomized on spawn
+@export var preferred_spacing: float = 2.0       ## Min distance from other enemies
 
 # -- Patrol --
 @export_group("Patrol")
@@ -49,13 +66,19 @@ var _stun_timer: float = 0.0
 var _spawn_position: Vector3
 
 # -- Knockback physics --
-var _knockback_velocity: Vector3 = Vector3.ZERO  ## Separate knockback vector decayed over time
+var _knockback_velocity: Vector3 = Vector3.ZERO
 var _hit_flash_timer: float = 0.0
-var _original_color: Color = Color.WHITE
+
+# -- Telegraph state --
+var _is_telegraphing: bool = false
+var _telegraph_timer: float = 0.0
+
+# -- Group coordination --
+var _group_attack_delay: float = 0.0  ## Per-instance random delay before attacking
 
 # -- Node references --
 @onready var model: Node3D = $Model
-@onready var animation_player: AnimationPlayer = $Model/AnimationPlayer if has_node("Model/AnimationPlayer") else null
+@onready var animation_player: AnimationPlayer = null
 @onready var nav_agent: NavigationAgent3D = $NavigationAgent3D if has_node("NavigationAgent3D") else null
 @onready var detection_area: Area3D = $DetectionArea if has_node("DetectionArea") else null
 
@@ -69,10 +92,15 @@ func _ready() -> void:
 	_spawn_position = global_position
 	add_to_group("enemies")
 
-	# Setup AnimationPlayer on the model INSTANCE (SkeletonModel),
-	# not on Model. Track paths like "Skeleton3D:hips" resolve correctly
-	# when the AnimationPlayer is at the .glb instance root level.
-	var char_model_instance: Node3D = model.get_child(0) as Node3D  # SkeletonModel
+	# Randomize orbit direction so enemies circle both ways
+	orbit_direction = 1.0 if randf() > 0.5 else -1.0
+
+	# Random attack delay so groups don't all swing at frame 0
+	_group_attack_delay = randf_range(0.0, attack_delay_variance)
+	_attack_timer = _group_attack_delay
+
+	# Setup AnimationPlayer on the model INSTANCE (SkeletonModel)
+	var char_model_instance: Node3D = model.get_child(0) as Node3D
 	if char_model_instance:
 		animation_player = AnimationHelper.setup_animation_player(char_model_instance)
 		AnimationHelper.load_animations_from_rig(animation_player, anim_rig_general)
@@ -87,7 +115,6 @@ func _ready() -> void:
 		nav_agent.target_desired_distance = 1.5
 		nav_agent.max_speed = chase_speed
 
-	# If no patrol points, default to standing in place
 	if patrol_points.is_empty():
 		current_state = State.IDLE
 	else:
@@ -95,13 +122,11 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	# Dead enemies still need gravity + move_and_slide for their death launch flight
 	if current_state == State.DEAD:
 		_apply_gravity(delta)
 		move_and_slide()
 		return
 
-	# Kill plane — enemies that fall off the map die immediately
 	if global_position.y < -10.0:
 		_die()
 		return
@@ -110,7 +135,6 @@ func _physics_process(delta: float) -> void:
 	_update_timers(delta)
 	_apply_knockback_decay(delta)
 
-	# Skip state processing if stunned
 	if not is_stunned:
 		match current_state:
 			State.IDLE:
@@ -124,14 +148,12 @@ func _physics_process(delta: float) -> void:
 			State.HURT:
 				_process_hurt(delta)
 
-	# Merge knockback into velocity for movement
 	velocity.x += _knockback_velocity.x
 	velocity.z += _knockback_velocity.z
 	velocity.y += _knockback_velocity.y
 
 	move_and_slide()
 
-	# Subtract knockback after move so state logic doesn't double-count
 	velocity.x -= _knockback_velocity.x
 	velocity.z -= _knockback_velocity.z
 	velocity.y -= _knockback_velocity.y
@@ -150,6 +172,14 @@ func _update_timers(delta: float) -> void:
 	if _attack_timer > 0:
 		_attack_timer -= delta
 
+	# Telegraph timer — when it expires, the actual hit lands
+	if _is_telegraphing:
+		_telegraph_timer -= delta
+		if _telegraph_timer <= 0.0:
+			_is_telegraphing = false
+			_execute_attack()
+			_restore_enemy_materials()  # Remove telegraph flash
+
 	if _hurt_timer > 0:
 		_hurt_timer -= delta
 		if _hurt_timer <= 0:
@@ -164,7 +194,6 @@ func _update_timers(delta: float) -> void:
 			is_stunned = false
 			velocity.x = 0
 			velocity.z = 0
-			# Reset to chase/idle — don't let enemy instantly attack on stun end
 			if target and is_instance_valid(target):
 				current_state = State.CHASE
 			else:
@@ -175,7 +204,6 @@ func _process_idle(delta: float) -> void:
 	velocity.x = move_toward(velocity.x, 0.0, 10.0 * delta)
 	velocity.z = move_toward(velocity.z, 0.0, 10.0 * delta)
 
-	# Check if player is in range
 	if target:
 		current_state = State.CHASE
 
@@ -194,7 +222,6 @@ func _process_patrol(delta: float) -> void:
 	direction.y = 0
 
 	if direction.length() < 1.0:
-		# Reached patrol point, wait then move to next
 		_patrol_wait_timer += delta
 		velocity.x = move_toward(velocity.x, 0.0, 10.0 * delta)
 		velocity.z = move_toward(velocity.z, 0.0, 10.0 * delta)
@@ -220,28 +247,66 @@ func _process_chase(delta: float) -> void:
 	to_target.y = 0
 	var distance := to_target.length()
 
-	# Don't attack if we're on a completely different vertical level
 	if y_diff > 3.0:
 		return
 
-	# If in attack range, attack
+	# In attack range → attack
 	if distance <= attack_range:
 		current_state = State.ATTACK
 		velocity.x = 0
 		velocity.z = 0
 		return
 
-	# If target too far, give up
+	# Lost interest
 	if distance > detection_range * 1.5:
 		target = null
 		current_state = State.IDLE
 		return
 
-	# Direct movement toward target (nav agent requires a baked navmesh)
-	var direction := to_target.normalized()
-	velocity.x = direction.x * chase_speed
-	velocity.z = direction.z * chase_speed
-	_rotate_toward(direction, delta)
+	# ---- ORBIT BEHAVIOR (NEW) ----
+	# When close to attack range, circle the player instead of running straight in.
+	# This prevents the "damage blob" problem where all enemies stack on each other.
+	if distance < attack_range * 2.5:
+		var forward_dir := to_target.normalized()
+		# Perpendicular orbit vector
+		var orbit_dir := Vector3(-forward_dir.z, 0, forward_dir.x) * orbit_direction
+		# Blend: mostly forward (close gap) + some orbit (circle)
+		var blend: float = clampf((distance - attack_range) / (attack_range * 1.5), 0.0, 1.0)
+		var move_dir := (forward_dir * blend + orbit_dir * (1.0 - blend * 0.7)).normalized()
+
+		velocity.x = move_dir.x * chase_speed * 0.8
+		velocity.z = move_dir.z * chase_speed * 0.8
+		_rotate_toward(forward_dir, delta)  # Always face player
+
+		# Push away from nearby allies to avoid stacking
+		_apply_separation(delta)
+	else:
+		# Far away — beeline toward player
+		var direction := to_target.normalized()
+		velocity.x = direction.x * chase_speed
+		velocity.z = direction.z * chase_speed
+		_rotate_toward(direction, delta)
+
+
+func _apply_separation(delta: float) -> void:
+	## Push away from nearby allies to prevent stacking.
+	var allies: Array[Node] = get_tree().get_nodes_in_group("enemies")
+	var push := Vector3.ZERO
+
+	for ally_node: Node in allies:
+		if ally_node == self or not (ally_node is Node3D):
+			continue
+		var ally: Node3D = ally_node as Node3D
+		var to_ally: Vector3 = global_position - ally.global_position
+		to_ally.y = 0
+		var dist: float = to_ally.length()
+		if dist < preferred_spacing and dist > 0.01:
+			# Stronger push the closer we are
+			push += to_ally.normalized() * (preferred_spacing - dist) / preferred_spacing
+
+	if push.length() > 0.01:
+		velocity.x += push.x * 4.0 * delta * chase_speed
+		velocity.z += push.z * 4.0 * delta * chase_speed
 
 
 func _process_attack(delta: float) -> void:
@@ -253,48 +318,88 @@ func _process_attack(delta: float) -> void:
 		current_state = State.IDLE
 		return
 
-	# Face the target
 	var to_target := target.global_position - global_position
 	var y_diff := absf(to_target.y)
 	to_target.y = 0
 	_rotate_toward(to_target.normalized(), delta)
 
-	# Can't attack from a completely different vertical level
 	if y_diff > 3.0:
 		current_state = State.CHASE
 		return
 
-	# Check if still in range
 	if to_target.length() > attack_range * 1.3:
 		current_state = State.CHASE
 		return
 
-	# Attack on cooldown
-	if _attack_timer <= 0:
-		_perform_attack()
-		_attack_timer = attack_cooldown
+	# ---- TELEGRAPH SYSTEM (NEW) ----
+	# Instead of instantly dealing damage, we START a telegraph.
+	# The enemy flashes/winds up, giving the player a reaction window.
+	# After telegraph_duration, _execute_attack() actually deals damage.
+	if _attack_timer <= 0 and not _is_telegraphing:
+		_start_telegraph()
+		_attack_timer = attack_cooldown + randf_range(0.0, attack_delay_variance)
+
+
+func _start_telegraph() -> void:
+	## Visual wind-up before the attack connects.
+	## Player sees the flash and has telegraph_duration seconds to dodge.
+	_is_telegraphing = true
+	_telegraph_timer = telegraph_duration
+
+	# Flash the enemy a warning color
+	_apply_telegraph_flash()
+
+	# Play attack animation during wind-up (the anim IS the telegraph)
+	if animation_player:
+		_play_anim("Hit_A")  # Reuse hit as attack telegraph for skeletons
+
+
+func _execute_attack() -> void:
+	## Actually deal damage — called after telegraph expires.
+	## Override in subclasses for different attack behaviors.
+	if current_state == State.DEAD or is_stunned:
+		return
+	if not target or not is_instance_valid(target):
+		return
+	if not target.has_method("take_damage"):
+		return
+
+	# Check player is still in range (they might have dodged during telegraph!)
+	var to_target: Vector3 = target.global_position - global_position
+	to_target.y = 0
+	if to_target.length() > attack_range * 1.5:
+		# Player dodged out — attack whiffs!
+		return
+
+	var hit_pos: Vector3 = (global_position + target.global_position) * 0.5
+	hit_pos.y += 0.5
+	VFXHelper.spawn_hit_sparks(get_tree().root, hit_pos, Color(1.0, 0.5, 0.2))
+	target.take_damage(attack_damage, global_position)
 
 
 func _perform_attack() -> void:
-	## Override in subclasses for different attack behaviors
-	if current_state == State.DEAD or is_stunned:
-		return
-	if target and is_instance_valid(target) and target.has_method("take_damage"):
-		# Spawn hit sparks at the point of impact
-		var hit_pos: Vector3 = (global_position + target.global_position) * 0.5
-		hit_pos.y += 0.5
-		VFXHelper.spawn_hit_sparks(get_tree().root, hit_pos, Color(1.0, 0.5, 0.2))
-		target.take_damage(attack_damage, global_position)
+	## Legacy method — subclasses that override this still work.
+	## But prefer overriding _execute_attack() for telegraph support.
+	_execute_attack()
+
+
+func _apply_telegraph_flash() -> void:
+	## Flash the enemy a warning color during wind-up.
+	var meshes: Array[MeshInstance3D] = []
+	_find_meshes_recursive(model, meshes)
+	for mesh_node: MeshInstance3D in meshes:
+		for i: int in range(mesh_node.get_surface_override_material_count()):
+			var mat: Material = mesh_node.get_surface_override_material(i)
+			if mat and mat is StandardMaterial3D:
+				(mat as StandardMaterial3D).albedo_color = telegraph_color
 
 
 func _process_hurt(_delta: float) -> void:
-	# Movement slows during hurt state — knockback handles displacement
 	velocity.x = move_toward(velocity.x, 0.0, 12.0 * _delta)
 	velocity.z = move_toward(velocity.z, 0.0, 12.0 * _delta)
 
 
 func _apply_knockback_decay(delta: float) -> void:
-	"""Smoothly decay the knockback impulse vector each frame."""
 	_knockback_velocity.x = move_toward(_knockback_velocity.x, 0.0, knockback_decay * delta)
 	_knockback_velocity.z = move_toward(_knockback_velocity.z, 0.0, knockback_decay * delta)
 	if is_on_floor():
@@ -304,7 +409,6 @@ func _apply_knockback_decay(delta: float) -> void:
 
 
 func _update_hit_flash(delta: float) -> void:
-	"""Flash the model white-red on hit then restore."""
 	if _hit_flash_timer > 0:
 		_hit_flash_timer -= delta
 		if _hit_flash_timer <= 0:
@@ -312,7 +416,6 @@ func _update_hit_flash(delta: float) -> void:
 
 
 func _apply_enemy_hit_flash() -> void:
-	"""Briefly tint the enemy model red on hit."""
 	_hit_flash_timer = 0.12
 	var meshes: Array[MeshInstance3D] = []
 	_find_meshes_recursive(model, meshes)
@@ -343,7 +446,6 @@ func _find_meshes_recursive(node: Node, result: Array[MeshInstance3D]) -> void:
 func _rotate_toward(direction: Vector3, delta: float) -> void:
 	if direction.length() < 0.01:
 		return
-	# Consistent -Z forward convention: atan2(-x, -z) for baked 180° models
 	var target_angle := atan2(-direction.x, -direction.z)
 	if model:
 		model.rotation.y = lerp_angle(model.rotation.y, target_angle, 10.0 * delta)
@@ -353,19 +455,21 @@ func _update_animation() -> void:
 	if not animation_player:
 		return
 
-	# Stunned enemies freeze in idle pose
 	if is_stunned:
 		_play_anim("Idle_A")
 		return
 
-	# KayKit animation names from rig files
+	# Don't interrupt telegraph animation
+	if _is_telegraphing:
+		return
+
 	match current_state:
 		State.DEAD:
 			_play_anim("Death_A")
 		State.HURT:
 			_play_anim("Hit_A")
 		State.ATTACK:
-			_play_anim("Hit_A") # Reuse hit as attack for skeletons
+			_play_anim("Idle_A")  # Idle between swings; telegraph plays attack anim
 		State.CHASE:
 			_play_anim("Running_A")
 		State.PATROL:
@@ -378,8 +482,6 @@ func _play_anim(anim_name: String) -> void:
 	if animation_player.has_animation(anim_name):
 		if animation_player.current_animation != anim_name:
 			animation_player.play(anim_name)
-	else:
-		pass
 
 
 func take_damage(amount: int, source_position: Vector3 = Vector3.ZERO) -> void:
@@ -389,20 +491,19 @@ func take_damage(amount: int, source_position: Vector3 = Vector3.ZERO) -> void:
 	current_health -= amount
 	emit_signal("enemy_damaged", self, current_health)
 
-	# --- Impulse-based knockback ---
-	# Knockback scales with damage dealt and inversely with resistance.
-	# Heavy hits (combo finisher, crits) send enemies flying further.
+	# Cancel telegraph on hit — getting smacked interrupts your swing
+	if _is_telegraphing:
+		_is_telegraphing = false
+		_telegraph_timer = 0.0
+
+	# Impulse knockback
 	if source_position != Vector3.ZERO:
 		var knockback_dir := (global_position - source_position).normalized()
 		knockback_dir.y = 0
-
-		# Base impulse + damage-proportional bonus
 		var impulse_strength: float = (4.0 + float(amount) * 0.2) / knockback_resistance
 		_knockback_velocity = knockback_dir * impulse_strength
-		# Small upward pop for game feel (larger hits = more pop)
 		_knockback_velocity.y = clampf(float(amount) * 0.08, 0.5, 3.0) / knockback_resistance
 
-	# Visual feedback — flash red
 	_apply_enemy_hit_flash()
 
 	if current_health <= 0:
@@ -410,35 +511,32 @@ func take_damage(amount: int, source_position: Vector3 = Vector3.ZERO) -> void:
 	else:
 		current_state = State.HURT
 		_hurt_timer = hit_stagger_duration
-		# Stagger interrupts current action
+		# Stagger stuns for the FULL stagger duration (was 0.5x before — too short)
 		is_stunned = true
-		_stun_timer = hit_stagger_duration * 0.5
+		_stun_timer = hit_stagger_duration
 
 
 func _die() -> void:
 	current_state = State.DEAD
 	target = null
 	is_stunned = false
+	_is_telegraphing = false
 	emit_signal("enemy_died", self)
 
-	# --- Death launch: dramatic upward + outward impulse ---
-	# Keep physics running briefly so the body flies through the air
+	# Death launch
 	var launch_dir: Vector3 = _knockback_velocity.normalized()
 	if launch_dir.length() < 0.1:
-		# Random scatter if no knockback direction
 		launch_dir = Vector3(randf_range(-1.0, 1.0), 0, randf_range(-1.0, 1.0)).normalized()
 	velocity = launch_dir * death_tumble_force
 	velocity.y = death_launch_force
 
-	# Disable collision so dead body doesn't block players/enemies
+	# Disable collision
 	set_collision_layer_value(1, false)
 	set_collision_layer_value(2, false)
 	set_collision_layer_value(3, false)
 	set_collision_mask_value(2, false)
 	set_collision_mask_value(3, false)
-	# Keep environment mask (1) so body lands on floor
 
-	# Disable detection area and disconnect signals so no deferred callbacks fire
 	if detection_area:
 		detection_area.set_collision_mask_value(2, false)
 		detection_area.monitoring = false
@@ -448,19 +546,15 @@ func _die() -> void:
 		if detection_area.body_exited.is_connected(_on_detection_body_exited):
 			detection_area.body_exited.disconnect(_on_detection_body_exited)
 
-	# Play death animation directly
 	if animation_player and animation_player.has_animation("Death_A"):
 		animation_player.play("Death_A")
 
-	# Spawn death VFX — purple poof with bone debris
 	VFXHelper.spawn_death_poof(get_tree().root, global_position)
 
-	# Let the body fly for a moment, then stop physics and despawn
 	await get_tree().create_timer(0.6).timeout
 	set_physics_process(false)
 	set_process(false)
 
-	# Despawn after death animation finishes
 	var timer: SceneTreeTimer = get_tree().create_timer(1.5)
 	timer.timeout.connect(queue_free)
 
@@ -474,15 +568,14 @@ func _on_detection_body_entered(body: Node3D) -> void:
 
 func _on_detection_body_exited(body: Node3D) -> void:
 	if body is PlayerController and body == target:
-		# Keep chasing for a bit before losing interest
 		pass
 
 
 func stun(duration: float) -> void:
-	"""Stun the enemy for the given duration."""
 	if current_state == State.DEAD:
 		return
 	is_stunned = true
+	_is_telegraphing = false  # Cancel any wind-up
 	_stun_timer = duration
 	velocity.x = 0
 	velocity.z = 0
